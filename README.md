@@ -2,6 +2,8 @@
 
 [![Paper](https://img.shields.io/badge/Paper-Arxiv-red)](https://xxx) [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0) [![Project Page](https://img.shields.io/badge/Project-Page-blue)](xxx)
 
+English | [中文](/docs/README_zh.md)
+
 This is the official implementation for the paper **"Pianist Transformer: Towards Expressive Piano Performance Rendering via Scalable Self-Supervised Pre-Training"**.
 
 Our work demonstrates that by pre-training on billions of tokens of unlabeled MIDI data, a model can learn a profound understanding of musical structures. This knowledge can then be transferred to the downstream task of expressive performance generation, producing piano performances that are statistically indistinguishable from those of human pianists in subjective listening tests.

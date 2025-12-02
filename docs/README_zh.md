@@ -1,6 +1,8 @@
 # Pianist Transformer: Towards Expressive Piano Performance Rendering via Scalable Self-Supervised Pre-training
 
-[![Paper](https://img.shields.io/badge/paper-arxiv-red)](https://[此处替换为你的ArXiv链接]) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Project Page](https://img.shields.io/badge/Project-Page-blue)](https://[此处替换为你的项目主页链接])
+[![Paper](https://img.shields.io/badge/Paper-Arxiv-red)](https://xxx) [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0) [![Project Page](https://img.shields.io/badge/Project-Page-blue)](xxx)
+
+[English](/README.md) | 中文
 
 这是论文 **《Pianist Transformer: Towards Expressive Piano Performance Rendering via Scalable Self-Supervised Pre-Training》** 的官方实现。
 
@@ -135,7 +137,7 @@ python -m src.gui.ui
 ### 界面与功能介绍
 
 <p align="center">
-  <img src="assets/gui.png" width="800"/>
+  <img src="/assets/gui.png" width="800"/>
   <br>
 </p>
 
