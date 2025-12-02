@@ -1,0 +1,15 @@
+{
+  "citation": "",
+  "description": "",
+  "features": {
+    "input_ids": {
+      "feature": {
+        "dtype": "int64",
+        "_type": "Value"
+      },
+      "_type": "List"
+    }
+  },
+  "homepage": "",
+  "license": ""
+}

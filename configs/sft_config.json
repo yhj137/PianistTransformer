@@ -1,0 +1,31 @@
+{   
+    "data_paths": [
+        "data/processed/sft/sft.jsonl"
+    ],
+    "test_size": 0.05,
+    "block_size": 4096,
+    "pretrained_model": "models/pretrain",
+    "overlap_ratio": 0.5,
+    "output_dir": "./models/sft/",
+    "overwrite_output_dir": true,
+    "max_steps": -1,
+    "num_train_epochs": 2,
+    "save_steps": 400,
+    "logging_steps": 10,
+    "eval_steps": 10,
+    "per_device_train_batch_size": 4,
+    "gradient_accumulation_steps": 8,
+    "lr_scheduler_type": "cosine",
+    "learning_rate": 5e-4,
+    "warmup_steps": 0,
+    "warmup_ratio": 0,
+    "save_total_limit": 50,
+    "prediction_loss_only": true,
+    "bf16": true,
+    "report_to": "wandb",
+    "logging_dir": "~/tf-logs/",
+    "eval_strategy": "steps",
+    "save_strategy": "epoch",
+    "logging_strategy": "steps",
+    "logging_first_step": true
+}

@@ -1,0 +1,41 @@
+{
+  "builder_name": "json",
+  "citation": "",
+  "config_name": "default",
+  "dataset_name": "json",
+  "dataset_size": 91596,
+  "description": "",
+  "download_checksums": {
+    "/Users/youhongjie/Documents/mycode/pianist-transformer/data/processed/pretrain/cut/scores/train_0.jsonl": {
+      "num_bytes": 62008,
+      "checksum": null
+    }
+  },
+  "download_size": 62008,
+  "features": {
+    "input_ids": {
+      "feature": {
+        "dtype": "int64",
+        "_type": "Value"
+      },
+      "_type": "List"
+    }
+  },
+  "homepage": "",
+  "license": "",
+  "size_in_bytes": 153604,
+  "splits": {
+    "train": {
+      "name": "train",
+      "num_bytes": 91596,
+      "num_examples": 3,
+      "dataset_name": "json"
+    }
+  },
+  "version": {
+    "version_str": "0.0.0",
+    "major": 0,
+    "minor": 0,
+    "patch": 0
+  }
+}

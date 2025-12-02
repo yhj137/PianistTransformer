@@ -1,0 +1,101 @@
+{
+    "note_density_in_interval":{
+        "args": {
+            "test_params_list": 
+            [
+                {
+                    "max_notes_per_second": 60,
+                    "max_notes_per_second_per_pitch": 15,
+                    "interval_len_s": 3
+                },
+                {
+                    "max_notes_per_second": 45,
+                    "max_notes_per_second_per_pitch": 10,
+                    "interval_len_s": 5
+                },
+                {
+                    "max_notes_per_second": 40,
+                    "max_notes_per_second_per_pitch": 8,
+                    "interval_len_s": 10
+                },
+                {
+                    "max_notes_per_second": 30,
+                    "max_notes_per_second_per_pitch": 6,
+                    "interval_len_s": 45
+                }
+            ]
+        }
+    },
+    "note_timing_entropy":{
+        "args": {
+            "min_length_entropy": 2.5,
+            "min_onset_delta_entropy": 0.0
+        }
+    },
+    "note_pitch_entropy":{
+        "args": {
+            "min_entropy": 3.0
+        }
+    },
+    "unique_pitch_count_in_interval":{
+        "args": {
+            "test_params_list": 
+            [
+                {"min_unique_pitch_cnt": 5, "interval_len_s": 30},
+                {"min_unique_pitch_cnt": 8, "interval_len_s": 60},
+                {"min_unique_pitch_cnt": 10, "interval_len_s": 120}
+            ]
+        }
+    },
+    "unique_pitch_count":{
+        "args": {
+            "min_num_unique_pitches": 12
+        }
+    },
+    "silent_interval":{
+        "args": {
+            "max_silence_s": 20
+        }
+    },
+    "mean_note_velocity":{
+        "args": {
+            "min_mean_velocity": 20,
+            "max_mean_velocity": 105
+        }
+    },
+    "max_programs":{
+        "args": {
+            "max": 12
+        }
+    },
+    "max_instruments":{
+        "args": {
+            "max": 7
+        }
+    },
+    "total_note_frequency":{
+        "args": {
+            "min_per_second": 1.5,
+            "max_per_second": 30
+        }
+    },
+    "note_frequency_per_instrument":{
+        "args": {
+            "min_per_second": 1.0,
+            "max_per_second": 25
+        }
+    },
+    "length":{
+        "args": {
+            "min_length_s": 30,
+            "max_length_s": 7200
+        }
+    },
+    "repetitive_content":{
+        "args": {
+            "min_length_m": 20,
+            "num_chunks": 5,
+            "kl_tolerance": 0.2
+        }
+    }
+}

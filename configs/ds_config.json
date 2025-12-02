@@ -1,0 +1,18 @@
+{
+    "bf16": { "enabled": true },
+    "optimizer": {
+      "type": "AdamW",
+      "params": { "lr": "auto", "weight_decay": "auto" }
+    },
+    "zero_optimization": {
+      "stage": 2,
+      "offload_optimizer": {
+          "device": "cpu",
+          "pin_memory": true
+      },
+      "contiguous_gradients": true,
+      "overlap_comm": true
+    },
+    "train_micro_batch_size_per_gpu": "auto",
+    "gradient_accumulation_steps": "auto"
+}
