@@ -5,6 +5,8 @@ miditoolkit==1.0.1
 wandb==0.21.4
 partitura==1.7.0
 seaborn==0.13.2
+modelscope==1.32.0
+huggingface_hub==0.35.3
 # If you do not want to use GUI, just comment these
 PyQt5==5.15.11
 pygame==2.6.1

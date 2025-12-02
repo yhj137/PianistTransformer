@@ -1,6 +1,6 @@
 # Pianist Transformer: Towards Expressive Piano Performance Rendering via Scalable Self-Supervised Pre-training
 
-[![Paper](https://img.shields.io/badge/Paper-Arxiv-red)](https://xxx) [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0) [![Project Page](https://img.shields.io/badge/Project-Page-blue)](xxx)
+[![Paper](https://img.shields.io/badge/Paper-Arxiv-red)](https://xxx) [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0) [![Project Page](https://img.shields.io/badge/Project-Page-blue)](https://yhj137.github.io/pianist-transformer-demo/)
 
 [English](/README.md) | 中文
 
@@ -30,13 +30,24 @@
 -   **推理 (Inference)**: 普通CPU即可运行，GPU可加速推理。
 -   **训练 (Training)**: 为了高效地复现我们的训练过程，我们推荐使用 **4 x NVIDIA GeForce RTX 4090** 或同等级别的GPU。
 
+## 访问我们的模型
+
+您可以直接从 HuggingFace 和 ModelScope 获取我们提供的两类模型权重：**预训练模型** 与 **微调模型（可直接用于推理）**。
+
+
+| 模型 | HuggingFace | ModelScope | 参数量 |
+|---------|----------|-------------|------------|
+| pianist-transformer-base | [链接](https://huggingface.co/yhj137/pianist-transformer-base) | [链接](https://www.modelscope.cn/models/yhj137/pianist-transformer-base/) | 135M |
+| pianist-transformer-rendering | [链接](https://huggingface.co/yhj137/pianist-transformer-rendering) | [链接](https://www.modelscope.cn/models/yhj137/pianist-transformer-rendering/) | 135M |
+
+
 ## 快速上手
 跟随以下步骤，你可以在5分钟内配置好环境，并使用 Pianist Transformer 生成你的第一首富有表现力的钢琴演奏。
 ### 1. 克隆代码库
 首先，将本仓库克隆到你的本地设备：
 ```bash
-git clone https://github.com/[Your-Username]/pianist-transformer.git
-cd pianist-transformer
+git clone https://github.com/yhj137/PianistTransformer.git
+cd PianistTransformer
 ```
 ### 2. 配置运行环境
 我们强烈建议使用 `conda` 创建一个独立的虚拟环境来运行此项目。
@@ -62,18 +73,17 @@ pip install torch==2.7.1 torchvision==0.22.1 torchaudio==2.7.1
 pip install -r requirements.txt
 ```
 
-### 3. 下载预训练模型
-我们已经将微调好的模型上传至 Hugging Face Hub，方便您下载使用。
+### 3. 下载模型权重
+我们已经将微调好的模型上传至HuggingFace和ModelScope，方便您下载使用。
 
 ```bash
-# 1. 创建模型存放目录
-mkdir -p models/sft
+# 从ModelScope下载 (国内用户)
+python -m src.utils.download_model --source modelscope
 
-# 2. 从 Hugging Face Hub 下载模型权重
-#    请将 [Your-HuggingFace-Repo-URL] 替换为实际的模型文件链接
-wget [Your-HuggingFace-Repo-URL] -O models/sft/pianist_transformer.pt
+# 从HuggingFace下载
+# python -m src.utils.download_model --source huggingface
 ```
-*提示：模型文件约 270 MB。下载完成后，请确保 `models/sft/` 目录下有 `pianist_transformer.pt` 这个文件。*
+*提示：模型文件约 270 MB。下载完成后，请确保 `models/sft/` 目录下有 `generation_config.json`, `config.json`, `model.safetensors` 这三个文件。*
 
 ### 4.运行推理脚本
 

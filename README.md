@@ -1,6 +1,6 @@
 # Pianist Transformer: Towards Expressive Piano Performance Rendering via Scalable Self-Supervised Pre-training
 
-[![Paper](https://img.shields.io/badge/Paper-Arxiv-red)](https://xxx) [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0) [![Project Page](https://img.shields.io/badge/Project-Page-blue)](xxx)
+[![Paper](https://img.shields.io/badge/Paper-Arxiv-red)](https://xxx) [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0) [![Project Page](https://img.shields.io/badge/Project-Page-blue)](https://yhj137.github.io/pianist-transformer-demo/)
 
 English | [中文](/docs/README_zh.md)
 
@@ -30,14 +30,24 @@ Our core dependencies include `PyTorch`, `Transformers`, `Accelerate`, and `midi
 -   **Inference**: A standard CPU is sufficient, though a GPU will accelerate the process.
 -   **Training**: To efficiently reproduce our training process, we recommend using **4 x NVIDIA GeForce RTX 4090** GPUs or equivalent.
 
+## Access Our Models
+
+You can directly obtain our model checkpoints from **HuggingFace** and **ModelScope**.  
+We provide two types of models: **pre-trained models** and **fine-tuned models (ready for inference)**.
+
+| Model | HuggingFace | ModelScope | Parameters |
+|-------|-------------|------------|------------|
+| pianist-transformer-base | [Link](https://huggingface.co/yhj137/pianist-transformer-base) | [Link](https://www.modelscope.cn/models/yhj137/pianist-transformer-base/) | 135M |
+| pianist-transformer-rendering | [Link](https://huggingface.co/yhj137/pianist-transformer-rendering) | [Link](https://www.modelscope.cn/models/yhj137/pianist-transformer-rendering/) | 135M |
+
 ## Quick Start
 Follow the steps below to set up the environment and generate your first expressive piano performance with Pianist Transformer in under 5 minutes.
 
 ### 1. Clone the Repository
 First, clone this repository to your local machine:
 ```bash
-git clone https://github.com/[Your-Username]/pianist-transformer.git
-cd pianist-transformer
+git clone https://github.com/yhj137/PianistTransformer.git
+cd PianistTransformer
 ```
 ### 2. Set Up the Environment
 We highly recommend using `conda` to create an isolated virtual environment for this project.
@@ -64,18 +74,18 @@ pip install torch==2.7.1 torchvision==0.22.1 torchaudio==2.7.1
 pip install -r requirements.txt
 ```
 
-### 3. Download the Pre-trained Model
-We have uploaded the fine-tuned model to the Hugging Face Hub for easy access.
+### 3. Download the Model Weights
+We have uploaded the fine-tuned model to the HuggingFace and ModelScope for easy access.
 
 ```bash
-# 1. Create a directory to store the model
-mkdir -p models/sft
+# from the HuggingFace
+python -m src.utils.download_model --source huggingface
 
-# 2. Download the model weights from the Hugging Face Hub
-#    Please replace [Your-HuggingFace-Repo-URL] with the actual model file link
-wget [Your-HuggingFace-Repo-URL] -O models/sft/pianist_transformer.pt
+# or from ModelScope (for Chinese Users)
+# python -m src.utils.download_model --source modelscope
 ```
-*Note: The model file is approximately 270 MB. After downloading, please ensure the file `pianist_transformer.pt` is located in the `models/sft/` directory.*
+
+*Note: The model file is approximately 270 MB. After downloading, please ensure the file `generation_config.json`, `config.json`, `model.safetensors` is located in the `models/sft/` directory.*
 
 ### 4. Run the Inference Script
 
