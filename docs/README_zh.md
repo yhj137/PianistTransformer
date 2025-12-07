@@ -102,7 +102,7 @@ sh script/inference.sh
 
 ### 1.数据预处理
 
-我们提供的脚本将自动处理仓库中自带的最小数据集，将其转换为模型训练所需的格式。
+我们提供的脚本将自动处理仓库中自带的最小数据集，将其转换为模型训练所需的格式。处理SFT数据需要安装音符对齐工具，请将 [Symbolic Music Alignment Tool](https://midialignment.github.io/demo.html)，放置在`./tools`下，目录结构为`./tools/AlignmentTool/*`，然后运行其中的`compile.sh`编译安装。完成后，运行如下脚本: 
 
 ```bash
 sh script/data_process.sh

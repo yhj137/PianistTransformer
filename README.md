@@ -104,7 +104,7 @@ To help you verify and understand the entire process, **we have included a minim
 
 ### 1. Data Preprocessing
 
-The provided script will automatically process the minimal dataset included in the repository, converting it into the format required for model training.
+The provided script will automatically process the minimal dataset included in the repository, converting it into the format required for model training. To process the SFT data, you need to install the note-alignment tool. Please place the [Symbolic Music Alignment Tool](https://midialignment.github.io/demo.html)￼ under `./tools`, with the directory structure `./tools/AlignmentTool/*`, and then run the `compile.sh` script inside it to compile and install. After that, run the following script:
 
 ```bash
 sh script/data_process.sh
