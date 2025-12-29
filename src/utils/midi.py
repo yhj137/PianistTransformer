@@ -5,162 +5,15 @@ import os
 from copy import copy
 import random
 from collections import defaultdict
-
-"""
-def normalize_midi(midi_obj, target_ticks_per_beat = 500, target_tempo = 120):
-    ticks_per_beat = midi_obj.ticks_per_beat
-    merged_events = []
-    for i in range(len(midi_obj.instruments)):
-        filter_control_changes = []
-        for cc in midi_obj.instruments[i].control_changes:
-            if cc.number == 64:
-                filter_control_changes.append(cc)
-        merged_events.extend(midi_obj.instruments[i].notes + filter_control_changes)
-    merged_events.sort(key=lambda x: (x.start, x.pitch) if isinstance(x, Note) else (x.time, x.number))
-    
-    time_interval = []
-    last_time = 0
-    for note in merged_events:
-        if isinstance(note, Note):
-            time_interval.append(note.start - last_time)
-            last_time = note.start
-        else:
-            time_interval.append(note.time - last_time)
-            last_time = note.time
-
-    output_notes = []
-    output_cc = []
-    ind = -1
-    now_tempo = 120
-    now_time = 0
-    for i, note in enumerate(merged_events):
-        if isinstance(note, Note):
-            time = note.start
-        else:
-            time = note.time
-        while ind + 1 < len(midi_obj.tempo_changes) and time >= midi_obj.tempo_changes[ind+1].time:
-            now_tempo = midi_obj.tempo_changes[ind+1].tempo
-            ind += 1
-        ratio = target_ticks_per_beat * target_tempo / now_tempo / ticks_per_beat
-        start_time = time_interval[i] * ratio + now_time
-        if isinstance(note, Note):
-            end_time = (note.end - note.start) * ratio + start_time
-            output_notes.append(Note(note.velocity, note.pitch, round(start_time), round(end_time)))
-        else:
-            output_cc.append(ControlChange(64, note.value, round(start_time)))
-        now_time = round(start_time)
-    
-    output_midi_obj = MidiFile(ticks_per_beat=target_ticks_per_beat)
-    output_midi_obj.instruments.append(Instrument(program=0, is_drum=False, name="Piano", notes=output_notes, control_changes=output_cc))
-    output_midi_obj.tempo_changes.append(TempoChange(target_tempo, 0))
-    for note in output_notes:
-        output_midi_obj.max_tick = max(output_midi_obj.max_tick, note.end)
-    for cc in output_cc:
-        output_midi_obj.max_tick = max(output_midi_obj.max_tick, cc.time)
-    return output_midi_obj
-"""
-
-"""
-def normalize_midi(midi_obj, target_ticks_per_beat=500, target_tempo=120):    
-    # 创建一个新的、干净的MidiFile对象用于输出
-    output_midi_obj = MidiFile(ticks_per_beat=target_ticks_per_beat)
-    output_midi_obj.tempo_changes.append(TempoChange(target_tempo, 0))
-    
-    # 获取原始MIDI的tick到秒的精确映射
-    # 这是最关键的一步，partitura和miditoolkit都有类似功能
-    # miditoolkit的get_tick_to_time_mapping()可以处理所有tempo变化
-    tick_to_time_map = midi_obj.get_tick_to_time_mapping()
-    
-    # 计算从秒转换回目标tick的比例因子
-    # 目标MIDI中，每秒对应的tick数 = target_ticks_per_beat * (target_tempo / 60)
-    seconds_to_target_ticks_factor = target_ticks_per_beat * (target_tempo / 60.0)
-
-    merged_notes = []
-    merged_cc = []
-
-    # 遍历所有乐器轨道
-    for instrument in midi_obj.instruments:
-        # 只处理非鼓组的乐器
-        if not instrument.is_drum:
-            # --- 处理音符 (Notes) ---
-            for note in instrument.notes:
-                # 1. 将原始tick转换为绝对秒数
-                start_time_sec = tick_to_time_map[note.start]
-                end_time_sec = tick_to_time_map[note.end]
-                
-                # 2. 将绝对秒数转换为目标tick
-                new_start_tick = round(start_time_sec * seconds_to_target_ticks_factor)
-                new_end_tick = round(end_time_sec * seconds_to_target_ticks_factor)
-                
-                # 避免duration为0的音符
-                if new_start_tick == new_end_tick:
-                    new_end_tick += 1
-
-                merged_notes.append(Note(velocity=note.velocity, 
-                                         pitch=note.pitch, 
-                                         start=new_start_tick, 
-                                         end=new_end_tick))
-            
-            # --- 处理延音踏板 (CC #64) ---
-            for cc in instrument.control_changes:
-                if cc.number == 64:
-                    # 1. 将原始tick转换为绝对秒数
-                    time_sec = tick_to_time_map[cc.time]
-                    
-                    # 2. 将绝对秒数转换为目标tick
-                    new_time_tick = round(time_sec * seconds_to_target_ticks_factor)
-                    
-                    merged_cc.append(ControlChange(number=64, 
-                                                   value=cc.value, 
-                                                   time=new_time_tick))
-
-    # --- 排序并创建新乐器 ---
-    # 按开始时间排序，对于同时开始的事件，CC优先于Note
-    merged_notes.sort(key=lambda x: (x.start, x.pitch))
-    merged_cc.sort(key=lambda x: (x.time, x.number))
-    
-    output_instrument = Instrument(program=0, is_drum=False, name="Piano")
-    output_instrument.notes = merged_notes
-    output_instrument.control_changes = merged_cc
-    output_midi_obj.instruments.append(output_instrument)
-    
-    # --- 正确计算 max_tick ---
-    max_tick = 0
-    if output_instrument.notes:
-        max_tick = max(max_tick, max(n.end for n in output_instrument.notes))
-    if output_instrument.control_changes:
-        max_tick = max(max_tick, max(c.time for c in output_instrument.control_changes))
-    
-    output_midi_obj.max_tick = max_tick
-
-    return output_midi_obj
-"""
+import json
 
 def normalize_midi(midi_obj, target_ticks_per_beat=500, target_tempo=120):
-    """
-    将一个MidiFile对象标准化：
-    1. 合并所有轨道的钢琴音符和延音踏板事件。
-    2. 将所有时间信息（包括tempo变化）统一转换为一个固定的ticks_per_beat和tempo。
-    3. 清理重叠音符以避免解析错误。
-    4. 正确计算并设置max_tick。
-
-    Args:
-        midi_obj (MidiFile): 原始的MidiFile对象。
-        target_ticks_per_beat (int): 目标ticks_per_beat.
-        target_tempo (float): 目标tempo (BPM).
-
-    Returns:
-        MidiFile: 标准化后的新MidiFile对象。
-    """
-    
-    # 创建一个新的、干净的MidiFile对象用于输出
     output_midi_obj = MidiFile(ticks_per_beat=target_ticks_per_beat)
     output_midi_obj.tempo_changes.append(TempoChange(target_tempo, 0))
     
     tick_to_time_map = midi_obj.get_tick_to_time_mapping()
     seconds_to_target_ticks_factor = target_ticks_per_beat * (target_tempo / 60.0)
 
-    # --- 1. 收集并转换所有音符 ---
     all_converted_notes = []
     for instrument in midi_obj.instruments:
         if not instrument.is_drum:
@@ -172,45 +25,37 @@ def normalize_midi(midi_obj, target_ticks_per_beat=500, target_tempo=120):
                 new_end_tick = round(end_time_sec * seconds_to_target_ticks_factor)
                 
                 if new_start_tick >= new_end_tick:
-                    # 确保音符至少有1 tick的长度
                     new_end_tick = new_start_tick + 1
 
-                all_converted_notes.append(Note(velocity=note.velocity, 
-                                                pitch=note.pitch, 
-                                                start=new_start_tick, 
-                                                end=new_end_tick))
+                all_converted_notes.append(
+                    Note(
+                        velocity=note.velocity, 
+                        pitch=note.pitch, 
+                        start=new_start_tick, 
+                        end=new_end_tick
+                    )
+                )
 
-    # --- 2. 清理重叠音符 (关键新增部分) ---
-    # 首先按音高分组，然后按开始时间排序
     notes_by_pitch = defaultdict(list)
     for note in all_converted_notes:
         notes_by_pitch[note.pitch].append(note)
 
     merged_notes = []
     for pitch in sorted(notes_by_pitch.keys()):
-        # 对每个音高的音符列表按开始时间排序
         sorted_notes = sorted(notes_by_pitch[pitch], key=lambda n: n.start)
         
-        # 迭代并修复重叠
         if len(sorted_notes) > 1:
             for i in range(len(sorted_notes) - 1):
                 current_note = sorted_notes[i]
                 next_note = sorted_notes[i+1]
                 
-                # 如果当前音符的结束时间晚于或等于下一个音符的开始时间
                 if current_note.end >= next_note.start:
-                    # 修正当前音符的结束时间，让它在下一个音符开始前结束
-                    # 我们可以让它在下一个音符开始时就结束
                     current_note.end = next_note.start
-                    # 如果修复后导致时长为0，则丢弃该音符（或者设置为1 tick，这里选择前者更干净）
                     if current_note.start >= current_note.end:
-                         # 标记为待删除，而不是直接删除，以避免迭代问题
-                         current_note.pitch = -1 # 用一个无效音高作为标记
-
-        # 将处理过的（且未被标记删除的）音符添加到最终列表
+                        current_note.pitch = -1
+                        
         merged_notes.extend([n for n in sorted_notes if n.pitch != -1])
 
-    # --- 3. 收集并转换CC事件 ---
     merged_cc = []
     for instrument in midi_obj.instruments:
         if not instrument.is_drum:
@@ -218,11 +63,14 @@ def normalize_midi(midi_obj, target_ticks_per_beat=500, target_tempo=120):
                 if cc.number == 64:
                     time_sec = tick_to_time_map[cc.time]
                     new_time_tick = round(time_sec * seconds_to_target_ticks_factor)
-                    merged_cc.append(ControlChange(number=64, 
-                                                   value=cc.value, 
-                                                   time=new_time_tick))
+                    merged_cc.append(
+                        ControlChange(
+                            number=64, 
+                            value=cc.value, 
+                            time=new_time_tick
+                        )
+                    )
 
-    # --- 4. 排序并创建新乐器 ---
     merged_notes.sort(key=lambda x: (x.start, x.pitch))
     merged_cc.sort(key=lambda x: (x.time, x.number))
     
@@ -231,16 +79,13 @@ def normalize_midi(midi_obj, target_ticks_per_beat=500, target_tempo=120):
     output_instrument.control_changes = merged_cc
     output_midi_obj.instruments.append(output_instrument)
     
-    # --- 5. 正确计算 max_tick ---
     max_tick = 0
     if output_instrument.notes:
         max_tick = max(max_tick, max(n.end for n in output_instrument.notes if n.end is not None))
     if output_instrument.control_changes:
         max_tick = max(max_tick, max(c.time for c in output_instrument.control_changes if c.time is not None))
     
-    # 添加一个小的buffer，确保最后一个事件不会被截断
     output_midi_obj.max_tick = max_tick + target_ticks_per_beat 
-
     return output_midi_obj
 
 def merge_and_sort(midi_obj):
@@ -275,7 +120,7 @@ def merge_and_sort(midi_obj):
                 if current_note.end >= next_note.start:
                     current_note.end = next_note.start
                     if current_note.start >= current_note.end:
-                         current_note.pitch = -1
+                        current_note.pitch = -1
 
         merged_notes.extend([n for n in sorted_notes if n.pitch != -1])
 
@@ -336,12 +181,19 @@ def midi_to_ids(config, midi_obj, normalize=True):
         ids.extend([pitch, interval, velocity, duration, pedal1, pedal2, pedal3, pedal4])
     return ids
 
-def ids_to_midi(config, ids, target_ticks_per_beat = 500, target_tempo = 120, pedal_ratio = 1.0):
+def ids_to_midi(config, ids, target_ticks_per_beat = 500, target_tempo = 120, ref = None):
     note_list = []
     cc_list = []
     intervals = []
     for i in range(0, len(ids), 8):
-        intervals.append(ids[i+1] - config.timing_start)
+        if ref:
+            if ref[i+1]  - config.timing_start > 0:
+                intervals.append(max(5, ids[i+1] - config.timing_start))
+            else:
+                intervals.append(ids[i+1] - config.timing_start)
+
+        else:
+            intervals.append(ids[i+1] - config.timing_start)
     intervals.append(4990)
     
     last_time = 0
@@ -358,7 +210,7 @@ def ids_to_midi(config, ids, target_ticks_per_beat = 500, target_tempo = 120, pe
         last_time += interval
         
         interval_time = intervals[i // 8 + 1]
-        interval_step = intervals[i // 8 + 1] / 4 * pedal_ratio
+        interval_step = intervals[i // 8 + 1] / 4
 
         cc_list.append(ControlChange(64, pedal1, last_time))
         cc_list.append(ControlChange(64, pedal2, round(last_time + interval_step)))
@@ -652,8 +504,12 @@ def enhanced_ids_uniform(config, ids):
             res[i] = config.valid_id_range[j][0] + value
     return res
 
-#if __name__ == "__main__":
-#    midi_obj = MidiFile("data/midi/test/2.mid")
-#    ids = midi_to_ids(midi_obj)
-#    midi = ids_to_midi(ids)
-#    midi.dump("data/rebuild/2.mid")
+if __name__ == "__main__":
+    from src.model.pianoformer import PianoT5GemmaConfig
+    config = PianoT5GemmaConfig()
+    with open("temp/out.json", "r") as f:
+        ids = json.load(f)
+    score_midi = MidiFile("temp/s.mid")
+    score_ids = midi_to_ids(config, score_midi)
+    midi = ids_to_midi(config, ids, ref=score_ids)
+    midi.dump("temp/rebuild.mid")
