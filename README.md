@@ -169,7 +169,7 @@ Our GUI is divided into three main sections: **Control & Parameters**, **Status 
 1.  **Load Score (`Load MIDI`)**: Click the `Load MIDI` button on the right side of the interface to select the score MIDI file you want to render.
 
 2.  **Adjust Generation Parameters**:
-    *   **`Temperature`**: Controls the randomness of the generated output. A higher value leads to a more "improvisational" feel, while a lower value makes the result more stable and deterministic.
+    *   **`Temperature`**: Controls the randomness of the generated output. A higher value leads to a more "improvisational" feel. Note that setting the temperature too low may cause the model to produce extreme expressions or fall into repetitive local patterns. We recommend starting from the default value and making moderate adjustments for the best results.
     *   **`Top-p`**: A more advanced sampling strategy that controls the diversity of the output. It is generally recommended to keep the default value.
     *   **`Max Tempo`**: Controls the maximum tempo value when saving the edited rendered MIDI. Any tempo exceeding this value will be clipped.
 
