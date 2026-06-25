@@ -1,8 +1,14 @@
 # Pianist Transformer: Towards Expressive Piano Performance Rendering via Scalable Self-Supervised Pre-training
 
-[![Paper](https://img.shields.io/badge/Paper-Arxiv-red)](https://arxiv.org/abs/2512.02652) [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0) [![Project Page](https://img.shields.io/badge/Project-Page-blue)](https://yhj137.github.io/pianist-transformer-demo/)
+[![Paper](https://img.shields.io/badge/Paper-Arxiv-red)](https://arxiv.org/abs/2512.02652) [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0) [![Project Page](https://img.shields.io/badge/Project-Page-blue)](https://yhj137.github.io/pianist-transformer-demo/) [![ICML 2026](https://img.shields.io/badge/ICML-2026_Poster-brightgreen)](https://icml.cc/virtual/2026/poster/61542)
+
 
 English | [中文](/docs/README_zh.md)
+
+---
+🎉 **This work has been accepted to ICML 2026!**
+
+---
 
 This is the official implementation for the paper **"Pianist Transformer: Towards Expressive Piano Performance Rendering via Scalable Self-Supervised Pre-Training"**.
 
@@ -189,12 +195,10 @@ Our GUI is divided into three main sections: **Control & Parameters**, **Status 
 If you find our work, code, or models helpful in your research, we would be grateful if you could cite our paper:
 
 ```bibtex
-@misc{you2025pianisttransformerexpressivepiano,
-      title={Pianist Transformer: Towards Expressive Piano Performance Rendering via Scalable Self-Supervised Pre-Training}, 
-      author={Hong-Jie You and Jie-Jing Shao and Xiao-Wen Yang and Lin-Han Jia and Lan-Zhe Guo and Yu-Feng Li},
-      year={2025},
-      eprint={2512.02652},
-      archivePrefix={arXiv},
-      primaryClass={cs.SD}
+@inproceedings{you2026pianist,
+  title     = {Pianist Transformer: Towards Expressive Piano Performance Rendering via Scalable Self-Supervised Pre-Training},
+  author    = {You, Hong-Jie and Shao, Jie-Jing and Yang, Xiao-Wen and Jia, Lin-Han and Guo, Lan-Zhe and Li, Yu-Feng},
+  booktitle = {Proceedings of the 43rd International Conference on Machine Learning},
+  year      = {2026}
 }
 ```
