@@ -181,7 +181,7 @@ def midi_to_ids(config, midi_obj, normalize=True):
         ids.extend([pitch, interval, velocity, duration, pedal1, pedal2, pedal3, pedal4])
     return ids
 
-def ids_to_midi(config, ids, target_ticks_per_beat = 500, target_tempo = 120, ref = None):
+def ids_to_midi(config, ids, target_ticks_per_beat = 500, target_tempo = 120, ref = None, pedal_offset = 0.0, enabled_pedal_points = None):
     note_list = []
     cc_list = []
     intervals = []
@@ -209,19 +209,31 @@ def ids_to_midi(config, ids, target_ticks_per_beat = 500, target_tempo = 120, re
         note_list.append(Note(velocity, pitch, last_time + interval, last_time + interval + duration))
         last_time += interval
         
-        interval_time = intervals[i // 8 + 1]
         interval_step = intervals[i // 8 + 1] / 4
+        pedal_values = [pedal1, pedal2, pedal3, pedal4]
 
-        cc_list.append(ControlChange(64, pedal1, last_time))
-        cc_list.append(ControlChange(64, pedal2, round(last_time + interval_step)))
-        cc_list.append(ControlChange(64, pedal3, round(last_time + interval_time - interval_step * 2)))
-        cc_list.append(ControlChange(64, pedal4, round(last_time + interval_time - interval_step)))
+        if enabled_pedal_points is None:
+            enabled_pedal_points = [False, True, True, True]
+
+        for idx in range(4):
+            if enabled_pedal_points[idx]:
+                # offset: -1.0 (forward/earlier) ~ +1.0 (backward/later)
+                # original positions: 0, 1, 2, 3 (in units of interval_step)
+                new_pos = idx + pedal_offset
+                new_pos = max(0, min(3, new_pos))
+            else:
+                new_pos = idx
+            cc_list.append(ControlChange(64, pedal_values[idx], round(last_time + interval_step * new_pos)))
 
         #cc_list.append(ControlChange(64, pedal1, last_time))
         #cc_list.append(ControlChange(64, pedal2, round(last_time + intervals[i // 8 + 1] * 1 / 4)))
         #cc_list.append(ControlChange(64, pedal3, round(last_time + intervals[i // 8 + 1] * 2 / 4)))
         #cc_list.append(ControlChange(64, pedal4, round(last_time + intervals[i // 8 + 1] * 3 / 4)))
 
+    # Dedup: sort by time, then remove consecutive same-value CCs.
+    # Same-tick CCs: later token naturally wins because MIDI processes
+    # same-tick events in order, and later-ordered CCs overwrite earlier ones.
+    cc_list.sort(key=lambda cc: cc.time)
     last_value = 0
     new_cc_list = []
     for cc in cc_list:

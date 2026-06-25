@@ -54,6 +54,8 @@ class LanguageManager(QObject):
             'temperature': "Temperature",
             'top_p': "Top-p",
             'max_tempo': "Max Tempo",
+            'pedal_offset': "Pedal Offset",
+            'apply': "Apply",
             # Main Controls
             'original_score': "Original",
             'version_button': "V{0}",
@@ -95,6 +97,8 @@ class LanguageManager(QObject):
             'temperature': "Temperature",
             'top_p': "Top-p",
             'max_tempo': "最大速度",
+            'pedal_offset': "踏板偏移",
+            'apply': "应用",
             # Main Controls
             'original_score': "原乐谱",
             'version_button': "V{0}",
@@ -246,16 +250,16 @@ class RenderWorker(QObject):
                     raise InterruptedError("render_cancelled_by_user")
                 self.progress.emit(progress_float)
 
-            result = batch_performance_render(
+            result_midi, result_ids = batch_performance_render(
                 self.model,
                 [self.midi_obj],
                 temperature=self.temp,
                 top_p=self.top_p,
                 device=self.device,
-                progress_callback=_report_progress
+                progress_callback=_report_progress,
             )
             if not self._is_cancelled:
-                self.finished.emit(result[0])
+                self.finished.emit((result_midi[0], result_ids[0]))
         except InterruptedError as e:
             self.error.emit(str(e)) # Emit the key
         except Exception as e:
@@ -281,6 +285,7 @@ class AIPianistWindow(QWidget):
         pygame.init(); pygame.mixer.init()
         self.original_midi_obj = None; self.current_midi_obj = None
         self.rendered_midis = [None] * self.NUM_RENDER_SLOTS
+        self.rendered_ids = [None] * self.NUM_RENDER_SLOTS
         self.next_render_slot_index = 0
         self.active_slot_index = -1
         self.is_demo_mode = False
@@ -395,6 +400,7 @@ class AIPianistWindow(QWidget):
         self.temp_label.setText(self.tr("temperature"))
         self.topp_label.setText(self.tr("top_p"))
         self.max_tempo_label.setText(self.tr("max_tempo"))
+        self.pedal_offset_label.setText(self.tr("pedal_offset"))
 
         # Bottom controls
         self.switch_to_original_btn.setText(self.tr("original_score"))
@@ -404,6 +410,7 @@ class AIPianistWindow(QWidget):
         self._update_render_button_text() # Special handling for stateful button
         self.save_render_button.setText(self.tr("save_render"))
         self.save_editable_button.setText(self.tr("save_editable"))
+        self.pedal_offset_apply_btn.setText(self.tr("apply"))
 
     # --- NEW: Helper to manage the render button's stateful text ---
     def _update_render_button_text(self):
@@ -499,13 +506,15 @@ class AIPianistWindow(QWidget):
     def _update_render_progress(self, progress_float):
         self.progress_widget.setValue(progress_float * 100)
 
-    def _on_rendering_finished(self, rendered_midi):
+    def _on_rendering_finished(self, result):
+        rendered_midi, rendered_ids = result
         print("渲染成功完成!")
         self.progress_widget.hide()
-        
+
         # 步骤 1: 先更新数据状态
         actual_slot = (self.next_render_slot_index) % self.NUM_RENDER_SLOTS
         self.rendered_midis[actual_slot] = rendered_midi
+        self.rendered_ids[actual_slot] = rendered_ids
         self.next_render_slot_index += 1
         
         # 步骤 2: 激活新的MIDI版本。这个函数会调用 _update_ui_states()，
@@ -634,14 +643,14 @@ class AIPianistWindow(QWidget):
         self.temp_slider.setValue(100)
         self.temp_value_label = QLabel("1.00")
         self.temp_slider.valueChanged.connect(lambda val: self.temp_value_label.setText(f"{val/100.0:.2f}"))
-        
+
         self.topp_label = QLabel()
         self.topp_slider = QSlider(Qt.Horizontal)
         self.topp_slider.setRange(0, 100)
         self.topp_slider.setValue(95)
         self.topp_value_label = QLabel("0.95")
         self.topp_slider.valueChanged.connect(lambda val: self.topp_value_label.setText(f"{val/100.0:.2f}"))
-        
+
         self.max_tempo_label = QLabel()
         self.max_tempo_slider = QSlider(Qt.Horizontal)
         self.max_tempo_slider.setRange(200, 999)
@@ -649,20 +658,56 @@ class AIPianistWindow(QWidget):
         self.max_tempo_value_label = QLabel("300")
         self.max_tempo_slider.valueChanged.connect(lambda val: self.max_tempo_value_label.setText(str(val)))
 
+        self.pedal_offset_label = QLabel()
+        self.pedal_offset_slider = QSlider(Qt.Horizontal)
+        self.pedal_offset_slider.setRange(-100, 100)
+        self.pedal_offset_slider.setValue(0)
+        self.pedal_offset_value_label = QLabel("+0.00")
+        self.pedal_offset_slider.valueChanged.connect(self._on_pedal_offset_changed)
+
+        self.pedal_offset_apply_btn = QPushButton()
+        self.pedal_offset_apply_btn.setObjectName("ApplyButton")
+        self.pedal_offset_apply_btn.setFixedWidth(80)
+        self.pedal_offset_apply_btn.clicked.connect(self.apply_pedal_offset)
+
         widgets = [
             self.temp_label, self.temp_slider, self.temp_value_label,
             self.topp_label, self.topp_slider, self.topp_value_label,
-            self.max_tempo_label, self.max_tempo_slider, self.max_tempo_value_label
+            self.max_tempo_label, self.max_tempo_slider, self.max_tempo_value_label,
+            self.pedal_offset_label, self.pedal_offset_slider, self.pedal_offset_value_label,
+            self.pedal_offset_apply_btn,
         ]
-        
+
         for widget in widgets:
             layout.addWidget(widget)
-            
+
         layout.setStretch(1, 1)
         layout.setStretch(4, 1)
         layout.setStretch(7, 1)
-        
-        return layout
+        layout.setStretch(10, 1)
+
+        # --- Pedal point toggle buttons (separate row below) ---
+        point_row = QHBoxLayout()
+        point_row.setSpacing(6)
+        point_row.addStretch(7)
+        self.pedal_point_btns = []
+        for i in range(4):
+            btn = QPushButton(str(i + 1))
+            btn.setCheckable(True)
+            btn.setFixedSize(32, 32)
+            btn.setObjectName("PedalPointBtn")
+            btn.setChecked(i > 0)  # pedal1 off by default
+            btn.clicked.connect(lambda checked, idx=i: self._on_pedal_point_toggled(idx))
+            self.pedal_point_btns.append(btn)
+            point_row.addWidget(btn)
+        point_row.addStretch(1)
+
+        wrapper = QVBoxLayout()
+        wrapper.setSpacing(6)
+        wrapper.addLayout(layout)
+        wrapper.addLayout(point_row)
+
+        return wrapper
 
     def format_time(self, current_sec, total_sec):
         curr_min, curr_sec_rem = divmod(current_sec, 60); total_min, total_sec_rem = divmod(total_sec, 60)
@@ -724,6 +769,40 @@ class AIPianistWindow(QWidget):
             except Exception as e:
                 print(f"Error saving MIDI file: {e}")
 
+    def _on_pedal_offset_changed(self, val):
+        self.pedal_offset_value_label.setText(f"{val/100.0:+.2f}")
+        # When offset < 0, pedal1 would go out of range [-1, 3] → auto-disable it
+        if val < 0:
+            self.pedal_point_btns[0].setChecked(False)
+            self.pedal_point_btns[0].setEnabled(False)
+        else:
+            self.pedal_point_btns[0].setEnabled(True)
+
+    def _on_pedal_point_toggled(self, idx):
+        pass  # State is read from button's isChecked() at apply time
+
+    def apply_pedal_offset(self):
+        if self.active_slot_index < 0 or self.active_slot_index >= self.NUM_RENDER_SLOTS:
+            print("No active render slot to apply pedal offset.")
+            return
+        stored_ids = self.rendered_ids[self.active_slot_index]
+        if not stored_ids:
+            print("Error: Active slot has no stored IDs.")
+            return
+
+        offset = float(self.pedal_offset_value_label.text())
+        enabled = [btn.isChecked() for btn in self.pedal_point_btns]
+        try:
+            from src.utils.midi import ids_to_midi, midi_to_ids
+            score_ids = midi_to_ids(self.model.config, self.original_midi_obj)
+            new_midi = ids_to_midi(self.model.config, stored_ids, ref=score_ids, pedal_offset=offset, enabled_pedal_points=enabled)
+            self.rendered_midis[self.active_slot_index] = new_midi
+            self._load_midi_into_player(copy.deepcopy(new_midi))
+            pts = ''.join(['●' if e else '○' for e in enabled])
+            print(f"Pedal offset {offset:+.2f} [{pts}] applied to slot V{self.active_slot_index + 1}.")
+        except Exception as e:
+            print(f"Error applying pedal offset: {e}")
+
     def _load_midi_into_player(self, midi_to_load):
         self.reset_playback()
         self.current_midi_obj = midi_to_load
@@ -753,6 +832,7 @@ class AIPianistWindow(QWidget):
             
             self.original_midi_obj = miditoolkit.MidiFile(filepath)
             self.rendered_midis = [None] * self.NUM_RENDER_SLOTS
+            self.rendered_ids = [None] * self.NUM_RENDER_SLOTS
             self.next_render_slot_index = 0
             
             self.activate_original_midi()
@@ -940,6 +1020,27 @@ class AIPianistWindow(QWidget):
                 font-weight: bold;
             }
             QPushButton#VersionButton:checked:hover { background-color: #d35400; }
+
+            QPushButton#PedalPointBtn {
+                font-size: 13px; font-weight: bold;
+                border-radius: 16px;
+                padding: 0px;
+            }
+            QPushButton#PedalPointBtn:checked {
+                background-color: #3498db; color: white;
+            }
+            QPushButton#PedalPointBtn:checked:hover {
+                background-color: #2980b9;
+            }
+            QPushButton#PedalPointBtn:!checked {
+                background-color: #bdc3c7; color: #7f8c8d;
+            }
+            QPushButton#PedalPointBtn:!checked:hover {
+                background-color: #95a5a6; color: #555;
+            }
+            QPushButton#PedalPointBtn:disabled {
+                background-color: #d5dbdb; color: #abb2b9;
+            }
             
             #FilePathLabel { 
                 background-color: white; border: 1px solid #ccc; border-radius: 5px; 

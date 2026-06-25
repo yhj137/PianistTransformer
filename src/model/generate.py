@@ -41,14 +41,16 @@ class BatchSparseForcedTokenProcessor(LogitsProcessor):
 
 @torch.no_grad()
 def batch_performance_render(
-        model, 
-        score_midi_objs, 
-        max_context_length=4096, 
-        overlap_ratio=0.5, 
+        model,
+        score_midi_objs,
+        max_context_length=4096,
+        overlap_ratio=0.5,
         temperature=1.0,
         top_p=0.95,
         device="cpu",
-        progress_callback=None
+        progress_callback=None,
+        pedal_offset=0.0,
+        enabled_pedal_points=None,
     ):
     def slide_window(total_len, window_len):
         if total_len <= window_len:
@@ -117,10 +119,12 @@ def batch_performance_render(
     res_tensor = res_tensor.cpu().numpy().tolist()
     #print(res_tensor)
     res = []
+    res_ids = []
     for i in range(len(res_tensor)):
-        #print(res_tensor[i][:len_list[i]])
-        res.append(ids_to_midi(model.config, res_tensor[i][:len_list[i]], ref=ids_list[i]))
-    return res
+        token_ids = res_tensor[i][:len_list[i]]
+        res_ids.append(token_ids)
+        res.append(ids_to_midi(model.config, token_ids, ref=ids_list[i], pedal_offset=pedal_offset, enabled_pedal_points=enabled_pedal_points))
+    return res, res_ids
 
 
 def map_midi(score_midi_obj, performance_midi_obj, max_tempo=300):

@@ -17,9 +17,9 @@ if __name__ == "__main__":
     for i in range(1):
         midis.append(MidiFile(f"data/midis/testset/score/{i}.mid"))
 
-    res = batch_performance_render(
-        model, 
-        midis, 
+    res, res_ids = batch_performance_render(
+        model,
+        midis,
         temperature=1.0,
         top_p=0.95,
         device="cpu"
